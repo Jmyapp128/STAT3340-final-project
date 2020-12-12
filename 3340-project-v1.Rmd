@@ -1,0 +1,544 @@
+---
+title: "Stat3340 Final Project"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+Abstract
+
+It is strongly suggested that the selling price of a vehicle tends to be determined through certain factors of the vehicle. This study investigates the relationship between the selling price of the vehicles and other factors such as the year it was sold, the number of kilometers driven, the fuel type, transmission, and number of previous owners. Specifically, it hopes to identify which of these factors have the biggest impact on the selling price. To do so, a detailed list of 4340 vehicles was made and along with this included the factors mentioned above of these vehicles to determined if our hypothesis that there is a strong relationship. Our analysis shows a strong correlation between the selling price of vehicles and these other factors. The results show that although there is a relationship between the selling price and other factors it is not as strong as we expected.
+
+
+Introduction
+
+Question of Interest: We wish to see if which factors have a significant effect on the selling price of these vehicles; such as 
+
+•	for physical features 
+  o	If transmissions affect the price.
+  o	If The type of fuel used has an impact on the price.
+•	For history
+  o	If the year the car was sold is of importance.
+  o	If the kilometers driven affects the price.
+  o	If the number of previous owners has any significance.
+•	For sale
+  o	Whether an individual or dealer has any affect on the price. 
+
+
+Data Description:
+
+• Data set:
+We have used the data set "Car details from car dekho.csv" found in
+https://www.kaggle.com/nehalbirla/vehicle-dataset-from-cardekho
+
+•New Observation:
+The new observation that I introduced into the data set is a "Ford Freestyle Titanium Plus." It was sold for a price of $756000 in the year 2017. The number of kilometers the car has driven is 9300 km, The type of fuel it uses is "Petrol". It uses a "Manual" transmission It was sold by an "Individual". The owner who bought the car is the  "First Owner"
+
+
+
+Methods
+- Indicator variables
+o Used to include qualitative variables of our model
+o Used x1 for the year in which the car was built, x2 for the amount of km driven, x3P for
+the fuel type petrol, x3D for the fuel type diesel, x3E for the Electric fuel type, x3L for the LPG fuel type 
+x4T for the seller type of Trademark Dealer, x4I for the seller type of individual, 
+x5M for the transmission type of manual, x6TD for the car being a test drive car, 
+x6S for the buyer being the second owner, x6T for the buyer being the third owner,
+and x6F for the buyer being the fourth owner
+
+
+- Variable Selection
+o Used to create the best regression equation possible without having too few or too many
+variables in the equation.
+o Used stepwise regression because it is a variation of both forward selection and backward
+elimination
+o Using stepwise regression, the best model given was: y ~ x1 + x2 + x3D + x4I + x4D + x5M +
+x6S
+o It gave an AIC of 112522.3 which gives us the lowest AIC out of all the possible
+combinations of the full model making it the best model possible.
+
+- Model Fitting
+o Used lm function to fit the model of our data
+o Took a summary of this information
+o Anova table to
+o Prediction to predict how our fitted model worked with our data
+o Plotted the prediction of our selling price
+
+- Leverage
+o Computed the Hat matrix used to identify any of the influential variables in our data
+o Computed Hii (diagonal of the Hat matrix)
+o Used to find the most influential variables by computing hii&gt; 2p/n
+o Found the largest influential point
+o Created residual tables with the most influential points 10, 23, 9, 22
+
+
+- Residual Analysis
+o Used residuals
+o Used standardized residuals
+o Used studentized residuals
+o Plotted the residuals
+o Plotted residual table
+
+- Multicollinearity
+o Created the data into a matrix
+o Computed the correlation
+o Found the VIF - x1: 1.525467, x2: 1.468963, x3P: 45.908288, x3D: 45.957606, x3C:
+2.651233, x4I: 28.497225, x4D: 8.327203, x5M: 1.068397, x6F: 10.818221, x6S:
+9.206707, x6T: 3.841136
+o Shows that a lot of the variables are linear dependence
+
+- Variance Stabilizing Transformation
+o Computed the log of y and refitted the model to adapt to this change
+o Did a summary of this model
+o Did an anova table of this model
+o Plotted the new model to compare to the old one
+o Used this model in the residual analysis – standardized and studentized
+o Created a prediction model with the transformed model and plotted the new prediction
+  model with the residual analysis
+o Computed the VIF and found that the variables were more reasonably sized and not as
+  linear dependent
+o Created the forward selection and the AIC being -6524.93 and the best model log(y) ~ x1 +
+  x5M + x3D + x4I + x4D + x6F + x2 + x6S + x3P
+o and backward elimination for the newer transformed model being log(y) ~ x1 + x2 + x3P +
+  x3D + x4I + x4D + x5M + x6F + x6S with an AIC=-6524.93
+
+- Variance Stabilizing Transformation
+o Transformed the model by taking the log of y, x1 and x2.
+o Transformed the other variables by taking the inverse of them
+o Plotted the newer transformed model
+o Used residual analysis studentized and standardized
+o Prediction with the transformation
+o Plotted the predictions with the residuals
+o Took the VIF of the transformed model
+
+
+Results:
+
+```{r}
+library(leaps)
+```
+
+```{r}
+#install.packages("MPV")
+#install.packages("faraway")
+library(MPV) 
+library(faraway)
+```
+
+```{r}
+
+#install.packages("MASS")
+library(MASS)
+```
+
+```{r}
+#This is the imported data set that we will start with
+vehics=read.csv("CAR DETAILS FROM CAR DEKHO.CSV",header=T)
+
+#This is the new observation that I will be adding to the data set
+Newobservation<- data.frame("Ford Freestyle Titanium Plus", 2017, 756000, 9300, "Petrol", "Individual", "Manual", "First Owner"  )
+names(Newobservation)<- c("name", "year", "selling_price", "km_driven", "fuel", "seller_type", "transmission", "owner")
+
+#The completed data set that includes the new observation that will be used throughout the regression analysis
+vehicles<-rbind(vehics, Newobservation)
+```
+
+```{r}
+#The price the vehicle was sold at will be our Response variable
+y<-vehicles$selling_price
+```
+
+```{r}
+#These are the Regressor variables we will be using in our Analysis
+
+x1<-vehicles$year #The year of the vehicle when it was sold.
+
+x2<-vehicles$km_driven #The number of kilometers the car has drive.n
+
+x3<-vehicles$fuel #The Fuel type of the car.
+
+x4<-vehicles$seller_type #The type of seller who sold the car.
+
+x5<-vehicles$transmission #The Gear transmission of the car.
+
+x6<-vehicles$owner #The number of previous owners of the car.
+```
+
+```{r}
+#This is our Full regression model that uses all Regressor variables
+vehicles.out<-lm(y~x1+x2+x3+x4+x5+x6)
+
+#summary statistics of the Full model
+summary(vehicles.out)
+
+#The Analysis of Variance measurement of the full model
+anova(vehicles.out)
+qf(1-0.05, 1, 4327)
+qf(1-0.05, 2, 4327)
+qf(1-0.05, 4, 4327)
+```
+
+```{r}
+#Since Our fuel type predictor is a Categorial variable, we must create dummy variables for further use
+x3P<-rep(0,length(vehicles$fuel)) #value for cars that use Petrol gas
+x3D<-rep(0,length(vehicles$fuel)) #value for cars that use Diesel gas
+x3E<-rep(0,length(vehicles$fuel)) #value for cars that use electricity
+x3L<-rep(0,length(vehicles$fuel)) #value for cars that use LPG
+
+for(i in 
+    1:length(vehicles$fuel)) {
+  if(vehicles$fuel[i]=="Petrol")
+    x3P[i] = 1
+  if(vehicles$fuel[i]=="Diesel")
+    x3D[i] = 1
+  if(vehicles$fuel[i]=="Electric")
+    x3E[i] = 1
+  if(vehicles$fuel[i]=="LPG")
+    x3L[i] = 1
+}
+```
+
+```{r}
+x4I<-rep(0,length(vehicles$seller_type))
+x4T<-rep(0,length(vehicles$seller_type))
+
+for(i in 
+    1:length(vehicles$seller_type)) {
+  if(vehicles$seller_type[i]=="Individual")
+    x4I[i] = 1
+  if(vehicles$seller_type[i]=="Trustmark Dealer")
+    x4T[i] = 1
+}
+```
+
+```{r}
+x5M<-rep(0,length(vehicles$transmission))
+
+for(i in 
+    1:length(vehicles$transmission)) {
+  if(vehicles$transmission[i]=="Manual")
+    x5M[i] = 1
+}
+```
+
+```{r}
+x6F<-rep(0,length(vehicles$owner))
+x6S<-rep(0,length(vehicles$owner))
+x6T<-rep(0,length(vehicles$owner))
+x6TD<-rep(0, length(vehicles$owner))
+for(i in 
+    1:length(vehicles$owner)) {
+  if(vehicles$owner[i]=="Fourth & Above Owner")
+    x6F[i] = 1
+  if(vehicles$owner[i]=="Second Owner")
+    x6S[i] = 1
+  if(vehicles$owner[i]=="Third Owner")
+    x6T[i] = 1
+  if(vehicles$owner[i]=="Test Drive Car")
+    x6TD[i]=1
+}
+```
+
+```{r}
+X<-cbind(rep(1,length(vehicles$y)), x1, x2, x3D, x3E, x3L, x3P, x4I, x4T, x5M, x6F, x6S, x6TD, x6T)
+H<-X%*%solve(t(X)%*%X)%*%t(X)
+hii<-diag(H)
+n<-nrow(X)
+p<-ncol(X)
+```
+
+```{r}
+vehicles.out2<-lm(y~x1+x2+x3D+x3E+x3L+x3P+x4I+x4T+x5M+x6F+x6S+x6TD+x6T)
+summary(vehicles.out2)
+anova(vehicles.out2)
+preds2 <- predict(vehicles.out2,vehicles)
+qf(1-0.05,1,4327)
+```
+
+#residual analysis
+```{r}
+preds<-predict(vehicles.out)
+res<-resid(vehicles.out)
+rstand<-rstandard(vehicles.out)
+rstud<-rstudent(vehicles.out)
+plot(vehicles.out)
+plot(preds,rstud)
+plot(preds,rstand)
+residtable<-cbind(res, rstand, rstud)
+max(res)
+res[c(3873,90,3970)]
+res[4146]
+res[c(20,3000,400,5,33,333,499,555,456,987,234)]
+
+```
+
+
+
+#multicollinearity
+```{r}
+
+#When the correlations are large in magnitude, there is near linear dependence
+Xv<-cbind(x1, x2, x3D, x3E, x3L, x3P, x4I, x4T, x5M, x6F, x6S, x6TD, x6T)
+Xveh=as.matrix(scale(Xv,center=TRUE,scale=TRUE))
+Xvehcorr=t(Xveh)%*%Xveh/(length(Xv[,1])-1)
+print(Xvehcorr)
+#from the Xvehcorr matrix it shows that the correlation between x3D and x3P are significantly large so there must be a multiccollinearity between the Diesel and Petrol fuel type , 
+
+#If one, or more, of the VIFs are large (say great than 5 or 10), then there must be a multicollinearity for the regressor associated with the VIF.
+vif(vehicles.out)
+#The predictors whose VIF are suspicously large are x3P, x3D
+
+#So we therefore conclude that there is indeed a multicollinearity 
+#between the Diesel(x3D) and Petrol(x3P) fuel types.
+```
+
+
+#leverages and influences
+```{r}
+#if hii>2*p/n than the ith observation is a leverage point.
+#observations with large hii and large residuals are likely to be influential
+which(hii>2*p/n)
+max(hii)
+which(hii>0.4352625)
+hii[4146] 
+
+#From our analysis it seems that we have many leverage points but only one, influential point which appears to be observation 4146.
+#That being said it was discovered that observation[4146] is actually the only observation that has electricity for the fuel type variable. So in order to effectively remove this influential point I would have to remove X3E from the model; 
+#which is what I have decided to do in he end since in the anova(vehicles.out2)
+#the electricity fuel type is not significant to the response.
+```
+
+```{r}
+influence<-influence.measures(vehicles.out)
+print(influence)
+```
+
+```{r}
+vehicles2<-vehicles[-c(3873,90,3970,4146),]
+```
+
+```{r}
+
+ys<-vehicles2$selling_price
+
+xs1<-vehicles2$year #The year of the vehicle when it was sold.
+
+xs2<-vehicles2$km_driven #The number of kilometers the car has drive.n
+
+xs3<-vehicles2$fuel #The Fuel type of the car.
+
+xs4<-vehicles2$seller_type #The type of seller who sold the car.
+
+xs5<-vehicles2$transmission #The Gear transmission of the car.
+
+xs6<-vehicles2$owner #The number of previous owners of the car.
+```
+
+```{r}
+#This is our Full regression model that uses all Regressor variables
+cars.out<-lm(ys~xs1+xs2+xs3+xs4+xs5+xs6)
+
+#summary statistics of the Full model
+summary(cars.out)
+
+
+#The Analysis of Variance measurement of the full model
+anova(cars.out)
+plot(cars.out)
+```
+
+```{r}
+xs3P<-rep(0,length(vehicles2$fuel)) #value for cars that use Petrol gas
+xs3D<-rep(0,length(vehicles2$fuel)) #value for cars that use Diesel gas
+xs3L<-rep(0,length(vehicles2$fuel)) #value for cars that use LPG
+
+for(i in 
+    1:length(vehicles2$fuel)) {
+  if(vehicles2$fuel[i]=="Petrol")
+    xs3P[i] = 1
+  if(vehicles2$fuel[i]=="Diesel")
+    xs3D[i] = 1
+  if(vehicles2$fuel[i]=="LPG")
+    xs3L[i] = 1
+}
+```
+
+```{r}
+xs4I<-rep(0,length(vehicles2$seller_type))
+xs4T<-rep(0,length(vehicles2$seller_type))
+
+for(i in 
+    1:length(vehicles2$seller_type)) {
+  if(vehicles2$seller_type[i]=="Individual")
+    xs4I[i] = 1
+  if(vehicles2$seller_type[i]=="Trustmark Dealer")
+    xs4T[i] = 1
+}
+```
+
+```{r}
+xs5M<-rep(0,length(vehicles2$transmission))
+
+for(i in 
+    1:length(vehicles2$transmission)) {
+  if(vehicles2$transmission[i]=="Manual")
+    xs5M[i] = 1
+}
+```
+
+```{r}
+xs6F<-rep(0,length(vehicles2$owner))
+xs6S<-rep(0,length(vehicles2$owner))
+xs6T<-rep(0,length(vehicles2$owner))
+xs6TD<-rep(0, length(vehicles2$owner))
+for(i in 
+    1:length(vehicles2$owner)) {
+  if(vehicles2$owner[i]=="Fourth & Above Owner")
+    xs6F[i] = 1
+  if(vehicles2$owner[i]=="Second Owner")
+    xs6S[i] = 1
+  if(vehicles2$owner[i]=="Third Owner")
+    xs6T[i] = 1
+  if(vehicles2$owner[i]=="Test Drive Car")
+    xs6TD[i]=1
+}
+```
+
+```{r}
+Xs<-cbind(rep(1,length(vehicles2$ys)), xs1, xs2, xs3D, xs3L, xs3P, xs4I, xs4T, xs5M, xs6F, xs6S, xs6TD, xs6T)
+Hs<-Xs%*%solve(t(Xs)%*%Xs)%*%t(Xs)
+hiis<-diag(Hs)
+ns<-nrow(Xs)
+ps<-ncol(Xs)
+which(hiis>2*ps/ns)
+max(hiis)
+```
+
+```{r}
+cars.out2<-lm(ys~xs1+xs2+xs3D+xs3L+xs3P+xs4I+xs4T+xs5M+xs6F+xs6S+xs6TD+xs6T)
+summary(cars.out2)
+anova(cars.out2)
+carspreds2 <- predict(cars.out2,vehicles2)
+```
+
+```{r}
+carspreds<-predict(cars.out)
+carsres<-resid(cars.out)
+carsrstand<-rstandard(cars.out)
+carsrstud<-rstudent(cars.out)
+plot(cars.out)
+plot(carspreds,carsrstud)
+plot(carspreds,carsrstand)
+carsresidtable<-cbind(carsres, carsrstand, carsrstud)
+max(res)
+```
+
+```{r}
+#transformed equation
+vehicles.out3<-lm(log(ys)~xs1+xs2+xs3+xs4+xs5+xs6)
+summary(vehicles.out3)
+anova(vehicles.out3)
+qf(1-0.05,4,4326)
+```
+
+```{r}
+vehicles.out4<-lm(log(ys)~xs1+xs2+xs3D+xs3L+xs3P+xs4I+xs4T+xs5M+xs6F+xs6S+xs6TD+xs6T)
+anova(vehicles.out4)
+qf(1-0.05,1,4326)
+```
+
+```{r}
+null3<-lm(log(ys)~1)
+plot(vehicles.out3)
+rstud3<-rstudent(vehicles.out3)
+rstand3<-rstandard(vehicles.out3)
+preds3<-predict(vehicles.out3)
+res3<-resid(vehicles.out3)
+plot(preds3,rstud3)
+plot(preds3,rstand3)
+vif(vehicles.out3)
+residtable3<-cbind(res3, rstand3, rstud3)
+max(res3)
+```
+
+```{r}
+step12=step(null3,scope=list(lower=null3, upper=vehicles.out4), direction="forward")
+summary(step12)
+# log(ys) ~ xs1 + xs5M + xs3D + xs4I + xs4T + xs6T + xs2 + xs6F + xs6S + xs3P + xs6TD)
+```
+
+```{r}
+step22=step(vehicles.out4, direction="backward")
+#log(ys) ~ xs1 + xs2 + xs3D + xs3P + xs4I + xs4T + xs5M + xs6F + xs6S + xs6TD + xs6T
+```
+
+```{r}
+step32=step(null3,scope=list(lower=null3, upper=vehicles.out4), direction="both")
+summary(step32)
+anova(step32)
+ #log(ys) ~ xs1 + xs5M + xs3D + xs4I + xs4T + xs6T + xs2 + xs6F + xs6S + xs3P + xs6TD)
+```
+
+```{r}
+#So since with the results from the Forward elimination, backward elimination, and stepwise elimination all being the same We have decided to remove xs3L from the model 
+#So our new model is log(ys) ~ xs1 + xs5M + xs3D + xs4I + xs4T + xs6T + xs2 + xs6F + xs6S + xs3P + xs6TD
+```
+
+```{r}
+library(leaps)
+```
+
+
+```{r}
+X3=Xs[,-c(3,4,5)]
+leaps.out2=leaps(x=X3,y=log(ys),method="adjr2")
+leaps.out2
+max(leaps.out2$adjr2)
+which(leaps.out2$adjr2>0.605) 
+#60 log(y)~x1+x2+x4I+x4T+x5M+x6F+x6S+x6
+```
+
+```{r}
+vehicles.out5<-lm(log(y)~ x1 + x2 + x4 + x5 + x6)
+summary(vehicles.out5)
+anova(vehicles.out5)
+plot(vehicles.out5)
+qf(1-0.05, 1, 22)
+qf(1-0.05, 1, 4330)
+qf(1-0.05, 2, 4330)
+qf(1-0.05, 4, 4330)
+plot(vehicles.out3)
+```
+
+```{r}
+anova(vehicles.out3)
+qf(1-0.05, 1, 22)
+qf(1-0.05, 1, 4330)
+qf(1-0.05, 2, 4330)
+qf(1-0.05, 4, 4330)
+```
+
+```{r}
+vehicles.out6<-lm(log(ys)~ xs1 + xs2 + xs4I + xs4T + xs5M + xs6F + xs6S + xs6TD + xs6T)
+summary(vehicles.out6)
+anova(vehicles.out6)
+plot(vehicles.out6)
+preds6<-predict(vehicles.out6)
+
+```
+
+
+
+Final Project Conclusion
+
+After the analysis we have come to the conclusion of which factors have a significant effect on our response variable (selling price) of the vehicles
+•	For physical features
+  o	The type of transmission has a significant effect on the selling price 
+  o	Due to the fact that several It seems apparent that the type of fuel the car uses is not              relevant when it comes to determining the selling price
+•	For history
+  o	From our analysis the year the vehicle was created is significant as well. And from the plot is       seems that the newer the vehicle is the higher the price is
+  o	The Kilometers the vehicle has driven is relevant as well 
+  o	The number of past owners for the vehicle’s is significant to our predictor
+•	For sale
+  o	Finally, the selling price for the vehicle may be influenced by whether or not it was sold from       an Individual, a dealer, or a Trustmark Dealer
+
